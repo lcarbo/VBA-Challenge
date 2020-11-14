@@ -1,0 +1,166 @@
+Sub SummaryStarter():
+
+For Each ws In Worksheets
+
+LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+lastcolumn = ws.Cells(1, Columns.Count).End(xlToLeft).Column
+
+'Add the columns i need to populate
+
+ws.Cells(1, 10).Value = "Ticker"
+ws.Cells(1, 11).Value = "Yearly Change"
+ws.Cells(1, 12).Value = "Yearly % Change"
+ws.Cells(1, 13).Value = "Total Volume"
+
+
+'Layout and name all the variables I may need to use in this analysis
+
+Dim Ticker As String
+Ticker = ""
+Dim TotalVol As Double
+TotalVol = 0
+SummaryRow = 2
+Dim TickerCounter As Double
+TickerCounter = 0
+
+
+'loop through each ticker row
+
+    For r = 2 To ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+'Grab the ticker name each time it changes
+    If ws.Cells(r, 1).Value <> ws.Cells(r + 1, 1).Value Then
+        Ticker = ws.Cells(r, 1).Value
+        'Increment the total volume for that ticker
+        TotalVol = TotalVol + ws.Cells(r, 7).Value
+        'Populate ticker name and total volume in the summary table
+        ws.Range("J" & SummaryRow).Value = Ticker
+        ws.Range("M" & SummaryRow).Value = TotalVol
+       'Reset the counter and totals
+        SummaryRow = SummaryRow + 1
+        TotalVol = 0
+        TickerCounter = TickerCounter + 1
+    
+        
+
+    Else
+    'If the next row is informatoin about the same ticker, just increment the total volume
+        TotalVol = TotalVol + ws.Cells(r, 7).Value
+    
+      
+    End If
+    
+       Next r
+    
+
+ws.Cells(1, 14).Value = "Annual Open Price"
+ws.Cells(1, 15).Value = "Annual Close Price"
+
+'Layout and name all the variables I may need to use in this analysis
+
+
+Dim OpenPrice As Double
+Dim ClosePrice As Double
+
+SummaryRow = 2
+
+
+'loop through each ticker row
+
+    For r = 2 To ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+
+'Find the open date value
+'If the current row ticker is not equal to the prior row ticker, we've found the opening row for that ticker
+    If ws.Cells(r, 1).Value <> ws.Cells(r - 1, 1).Value Then
+        OpenPrice = ws.Cells(r, 3).Value
+        ws.Range("N" & SummaryRow).Value = OpenPrice
+        
+ 'If the current row equals the prior ticker but not the next ticker, we've found the last row for that ticker
+    ElseIf ws.Cells(r, 1).Value = ws.Cells(r - 1, 1).Value And ws.Cells(r, 1).Value <> ws.Cells(r + 1, 1).Value Then
+        ClosePrice = ws.Cells(r, 5).Value
+        ws.Range("O" & SummaryRow).Value = ClosePrice
+         'Reset the counter and totals
+        SummaryRow = SummaryRow + 1
+      
+    
+    End If
+    
+    
+       Next r
+    
+
+
+Dim PctChange As Double
+
+
+
+    
+'calculate changes
+
+SummaryRow = 2
+Dim AltPctChg As String
+
+
+    
+For r = 2 To TickerCounter + 1
+
+
+    If ws.Range("N" & SummaryRow).Value = 0 Then
+        ws.Range("K" & SummaryRow).Value = ws.Range("O" & SummaryRow).Value - ws.Range("N" & SummaryRow).Value
+        AltPctChg = "Growth from Zero"
+        ws.Range("L" & SummaryRow).Value = AltPctChg
+       
+   
+    ElseIf ws.Range("N" & SummaryRow).Value <> 0 Then
+        ws.Range("K" & SummaryRow).Value = ws.Range("O" & SummaryRow).Value - ws.Range("N" & SummaryRow).Value
+        PctChange = (ws.Range("K" & SummaryRow).Value / ws.Range("N" & SummaryRow).Value)
+        ws.Range("L" & SummaryRow).Value = PctChange
+        ws.Range("L" & SummaryRow).Style = "Percent"
+        ws.Range("K" & SummaryRow).Style = "Currency"
+       
+        
+    End If
+    
+     SummaryRow = SummaryRow + 1
+    
+    Next r
+    
+
+
+
+'format the positive and negative values for annual change
+
+SummaryRow = 2
+
+    For r = 2 To TickerCounter + 1
+    
+    
+        If ws.Range("K" & SummaryRow).Value > 0 Then
+            ws.Range("K" & SummaryRow).Interior.ColorIndex = 4
+
+         
+        ElseIf ws.Range("K" & SummaryRow).Value < 0 Then
+            ws.Range("K" & SummaryRow).Interior.ColorIndex = 3
+        
+        End If
+        
+        If ws.Range("L" & SummaryRow).Value > 0 Then
+            ws.Range("L" & SummaryRow).Interior.ColorIndex = 4
+
+         
+        ElseIf ws.Range("L" & SummaryRow).Value < 0 Then
+            ws.Range("L" & SummaryRow).Interior.ColorIndex = 3
+        
+        End If
+        
+        SummaryRow = SummaryRow + 1
+            
+    Next r
+
+TickerCounter = 0
+
+Next ws
+
+End Sub
+
